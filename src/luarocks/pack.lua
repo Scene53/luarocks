@@ -108,7 +108,19 @@ function pack.pack_installed_rock(query, tree)
       is_binary = true
    end
    if rock_manifest.lua then
-      local ok, err = copy_back_files(name, version, rock_manifest.lua, path.deploy_lua_dir(repo), dir.path(temp_dir, "lua"), "read")
+       
+       local deploy_dir = path.deploy_lua_dir(repo)
+       
+       -- adding the package name as a source dir for the installation.
+       -- TODO: move this logic to path.deploy_lua_dir() beacuse it is used also in 'repos' 
+       -- currently its a problem cause of dependencies problems ("path" will require "fetch"...)
+       local rockspec = fetch.load_rockspec(path.rockspec_file(name, version))
+       local install_files_in_package_dir = rockspec.build.install_files_in_package_dir
+       if install_files_in_package_dir then
+           deploy_dir = dir.path(deploy_dir, name)
+       end
+
+      local ok, err = copy_back_files(name, version, rock_manifest.lua, deploy_dir, dir.path(temp_dir, "lua"), "read")
       if not ok then return nil, "Failed copying back files: " .. err end
    end
    
