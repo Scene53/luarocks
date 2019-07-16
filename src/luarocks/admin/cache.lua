@@ -62,6 +62,7 @@ local function download_cache(protocol, server_path, user, password)
         if user then login_info = " --user="..user end
         if password then login_info = login_info .. " --password="..password end
         local cmd = cfg.variables.WGET.." --no-cache -q -m -np -nd -kpN -e robots=off --reject *.rock " ..protocol.. "://"..server_path..login_info
+        print("executing cmd = ", cmd)
         local res = os.execute(cmd)
         return res
     end
