@@ -330,7 +330,7 @@ function writer.make_manifest(repo, deps_mode, remote, merge_to_cached_manifest)
     local results = search.disk_search(repo, query)
     local manifest = { repository = {}, modules = {}, commands = {} }
     if merge_to_cached_manifest then
-        manifest = manif.load_manifest(repo)
+        manifest = manif.load_manifest(repo) or manifest
     end
 
     manif.cache_manifest(repo, nil, manifest)
@@ -343,7 +343,7 @@ function writer.make_manifest(repo, deps_mode, remote, merge_to_cached_manifest)
         for luaver in util.lua_versions() do
             local vmanifest = { repository = {}, modules = {}, commands = {} }
             if merge_to_cached_manifest then
-                vmanifest = manif.load_manifest(repo, luaver)
+                vmanifest = manif.load_manifest(repo, luaver) or vmanifest
             end
             local ok, err = store_results(results, vmanifest)
             filter_by_lua_version(vmanifest, luaver, repo, cache)
