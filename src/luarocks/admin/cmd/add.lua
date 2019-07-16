@@ -76,7 +76,7 @@ local function add_files_to_server(refresh, rockfiles, server, upload_server, do
    if not ok then return nil, err end
 
    util.printout("Updating manifest...")
-   writer.make_manifest(local_cache, "one", true)
+   writer.make_manifest(local_cache, "one", true, true)
    
    zip_manifests()
    
