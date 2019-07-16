@@ -50,39 +50,43 @@ function cache.split_server_url(url, user, password)
 end
 
 local function download_cache(protocol, server_path, user, password)
-   os.remove("index.html")
-   -- TODO abstract away explicit 'wget' call
-   if protocol == "rsync" then
-      local srv, path = server_path:match("([^/]+)(/.+)")
-      return fs.execute(cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..user.."@"..srv..":"..path.."/ ./")
-   elseif protocol == "file" then
-      return fs.copy_contents(server_path, ".")
-   else 
-      local login_info = ""
-      if user then login_info = " --user="..user end
-      if password then login_info = login_info .. " --password="..password end
-      return fs.execute(cfg.variables.WGET.." --no-cache -q -m -np -nd "..protocol.."://"..server_path..login_info)
-   end
+    os.remove("index.html")
+    -- TODO abstract away explicit 'wget' call
+    if protocol == "rsync" then
+        local srv, path = server_path:match("([^/]+)(/.+)")
+        return fs.execute(cfg.variables.RSYNC.." "..cfg.variables.RSYNCFLAGS.." -e ssh "..user.."@"..srv..":"..path.."/ ./")
+    elseif protocol == "file" then
+        return fs.copy_contents(server_path, ".")
+    else 
+        local login_info = ""
+        if user then login_info = " --user="..user end
+        if password then login_info = login_info .. " --password="..password end
+        local cmd = cfg.variables.WGET.." --no-cache -q -m -np -nd -kpN -e robots=off --reject *.rock " ..protocol.. "://"..server_path..login_info
+        local res = os.execute(cmd)
+        return res
+    end
 end
 
+
 function cache.refresh_local_cache(url, given_user, given_password)
-   local local_cache, protocol, server_path, user, password = cache.split_server_url(url, given_user, given_password)
+    local local_cache, protocol, server_path, user, password = cache.split_server_url(url, given_user, given_password)
 
-   local ok, err = fs.make_dir(local_cache)
-   if not ok then
-      return nil, "Failed creating local cache dir: "..err
-   end
+    print("local_cache = ", local_cache)
+    local res, err = fs.make_dir(local_cache)
+    if not res then
+        return nil, "Failed creating local cache dir: "..err
+    end
 
-   fs.change_dir(local_cache)
-   
-   util.printout("Refreshing cache "..local_cache.."...")
+    fs.change_dir(local_cache)
 
-   ok = download_cache(protocol, server_path, user, password)
-   if not ok then
-      return nil, "Failed downloading cache."
-   end
+    util.printout("Refreshing cache "..local_cache.."...")
 
-   return local_cache, protocol, server_path, user, password
+    res = download_cache(protocol, server_path, user, password)
+    if not res then
+        return nil, "Failed downloading cache."
+    end
+
+    return local_cache, protocol, server_path, user, password
 end
 
 return cache
