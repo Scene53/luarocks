@@ -330,6 +330,7 @@ function writer.make_manifest(repo, deps_mode, remote, merge_to_cached_manifest)
     local results = search.disk_search(repo, query)
     local manifest = { repository = {}, modules = {}, commands = {} }
     if merge_to_cached_manifest then
+        print("merge cached manifest")
         manifest = manif.load_manifest(repo) or manifest
     end
 
