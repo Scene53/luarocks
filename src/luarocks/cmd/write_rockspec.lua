@@ -227,7 +227,7 @@ end
 
 function write_rockspec.command(flags, name, version, url_or_dir)
     -- get rockspec format
-    local rockspec_format = flags["rockspec-format"]
+    local rockspec_format = flags["rockspec-format"] or type_rockspec.get_default_rockspec_format()
 
     name = util.adjust_name_and_namespace(name, flags)
 
@@ -274,7 +274,7 @@ function write_rockspec.command(flags, name, version, url_or_dir)
     local homepage = detect_homepage(url, flags["homepage"])
 
     local rockspec, err = rockspecs.from_persisted_table(filename, {
-            rockspec_format = flags["rockspec-format"],
+            rockspec_format = rockspec_format,
             package = name,
             version = version.."-1",
             source = {

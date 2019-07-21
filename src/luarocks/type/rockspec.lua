@@ -2,6 +2,7 @@ local type_rockspec = {}
 
 local type_check = require("luarocks.type_check")
 
+-- this is the latest and deafult rockspec_format. can't use rockspec_format greater than this one
 type_rockspec.rockspec_format = "4.0"
 
 -- Syntax for type-checking tables:
@@ -226,6 +227,11 @@ function type_rockspec.check(rockspec, globals)
     end
 
     return nil, err .. " (using rockspec format " .. version .. ")"
+end
+
+-- this function returns the default rockspec format
+function type_rockspec.get_default_rockspec_format()
+    return type_rockspec.rockspec_format
 end
 
 return type_rockspec
