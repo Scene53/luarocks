@@ -156,7 +156,7 @@ local rockspec_formats, versions = type_check.declare_schemas({
             },
             dependencies = {
                 _any = {
-                    _pattern = "%s*([a-zA-Z0-9%.%-%_]*/?[a-zA-Z0-9][a-zA-Z0-9%.%-%_]*)%s*([^/]*)",
+                    _pattern = "%s*([a-zA-Z0-9%p]+%s+%p+%s+[0-9%p]+)",
                 },
             },
         }
