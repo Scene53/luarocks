@@ -87,6 +87,7 @@ function make.command(flags, rockspec_filename)
    local name = util.adjust_name_and_namespace(rockspec.name, flags)
 
    local opts = build.opts({
+      avoid_fulfill_dependencies = flags["avoid-fulfill-dependencies"] or false,
       need_to_fetch = false,
       minimal_mode = true,
       deps_mode = deps.get_deps_mode(flags),

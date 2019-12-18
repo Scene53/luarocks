@@ -20,6 +20,7 @@ build.opts = util.opts_table("build.opts", {
    namespace = "string?",
    branch = "boolean",
    verify = "boolean",
+   avoid_fulfill_dependencies = "boolean"
 })
 
 do
@@ -126,9 +127,11 @@ local function process_dependencies(rockspec, opts)
          end
       end
    end
-   local ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify)
-   if err then
-      return nil, err, errcode
+   if not opts.avoid_fulfill_dependencies then
+      local ok, err, errcode = deps.fulfill_dependencies(rockspec, "dependencies", opts.deps_mode, opts.verify)
+      if err then
+         return nil, err, errcode
+      end
    end
    return true
 end
