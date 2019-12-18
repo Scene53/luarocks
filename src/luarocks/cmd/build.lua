@@ -150,6 +150,7 @@ function cmd_build.command(flags, name, version)
    name = util.adjust_name_and_namespace(name, flags)
 
    local opts = build.opts({
+      avoid_fulfill_dependencies = flags["avoid-fulfill-dependencies"] or false,
       need_to_fetch = true,
       minimal_mode = false,
       deps_mode = deps.get_deps_mode(flags),
