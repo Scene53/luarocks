@@ -222,6 +222,7 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
       connection_timeout = 30,  -- 0 = no timeout
 
       variables = {
+         SCRIPT_ENCRYPTOR = "scriptEncryptor",
          MAKE = "make",
          CC = "cc",
          LD = "ld",

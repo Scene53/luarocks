@@ -8,6 +8,15 @@ local cfg = require("luarocks.core.cfg")
 
 local vars = setmetatable({}, { __index = function(_,k) return cfg.variables[k] end })
 
+function tools.encrypt_script(targetFilePath)
+   assert(targetFilePath)
+   local ok, err = fs.execute(vars.SCRIPT_ENCRYPTOR, targetFilePath)
+   if not ok then
+      err = "failed encrypt script " .. targetFilePath
+   end
+   return ok, err
+end
+
 --- Adds prefix to command to make it run from a directory.
 -- @param directory string: Path to a directory.
 -- @param cmd string: A command-line string.
