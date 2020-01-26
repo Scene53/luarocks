@@ -24,11 +24,11 @@ do -- this is the run chunk
         for _, str_to_check in pairs(string_arr) do
             if str:match(str_to_check) then
                 return true
-            end 
+            end
         end
     end
 
-    local function is_file_excluded(file, build) 
+    local function is_file_excluded(file, build)
         local file_name = dir.base_name(file)
         local dir_name = dir.dir_name(file)
         local is_lua_file = file:match("(.*)%.lua$")
@@ -49,10 +49,10 @@ do -- this is the run chunk
         end
     end
 
-    local function should_iterate_recursively(module_data) 
+    local function should_iterate_recursively(module_data)
         -- this can maybe later move to some annotations manager...
         local asterisks = module_data:match('*+')
-        if not asterisks then 
+        if not asterisks then
         else
             local num_astrisks = asterisks:len()
             if num_astrisks == 1 then
@@ -99,11 +99,45 @@ do -- this is the run chunk
         return modules_to_destination
     end
 
---- Driver function for the purelua build back-end.
--- it iterates modules and copy them to the lib dir
--- @param rockspec table: the loaded rockspec.
--- @return boolean or (nil, string): true if no errors ocurred,
--- nil and an error message otherwise.
+
+    local function write_new_file(filename, str)
+        local fh = io.open(filename, "wb")
+        if not fh then return false end
+        fh:write(str)
+        fh:close()
+        return true
+    end
+
+    local function  get_meta_data_defaults(rockspec)
+        local build_meta_data_defaults = {
+            type = "code", -- default value
+            id = rockspec.package,
+            version = rockspec.version
+            -- deps??
+        }
+
+        return build_meta_data_defaults
+
+    end
+
+    local function get_build_meta_data(rockspec)
+        assert(rockspec:type() == "rockspec")
+        local build_meta_data = rockspec.build.meta_data or {}
+        local build_meta_data_defaults = get_meta_data_defaults(rockspec)
+
+        for k, v in pairs(build_meta_data_defaults) do
+            build_meta_data[k] = build_meta_data[k] or build_meta_data_defaults[k]
+        end
+
+        return build_meta_data
+    end
+
+
+    --- Driver function for the purelua build back-end.
+    -- it iterates modules and copy them to the lib dir
+    -- @param rockspec table: the loaded rockspec.
+    -- @return boolean or (nil, string): true if no errors ocurred,
+    -- nil and an error message otherwise.
     function purelua.run(rockspec)
         assert(rockspec:type() == "rockspec")
 
@@ -113,9 +147,19 @@ do -- this is the run chunk
             fs.make_dir(dir.dir_name(dest))
             ok, err = fs.copy(name, dest, perms)
             if not ok then
-                return nil, "Failed installing "..name.." in "..dest..": "..err
+                return false, "Failed installing "..name.." in "..dest..": "..err
             end
         end
+
+        -- build meta data can be used by a build system that uses this rock
+        local build_meta_data = get_build_meta_data(rockspec)
+        local json_ok, json = util.require_json()
+        if not json_ok then return nil, "A JSON library is required for this command. "..json end
+        local stringify = json.stringify(build_meta_data)
+        local install_dir = path.install_dir(rockspec.name, rockspec.version)     --path.lua_dir(rockspec.name, rockspec.version)
+        local meta_build_file_name = "meta.json"
+        local dest = dir.path(install_dir, meta_build_file_name)
+        write_new_file(dest, stringify)
 
         return true
     end
@@ -132,7 +176,7 @@ do
 
     local function get_deafult_dir_name_restrections()
         return {"test"}
-    end   
+    end
 
     local function get_deafult_file_name_restrections()
         return {"test"}
