@@ -11,7 +11,6 @@ local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
 local json = require("luarocks.tools.json")
 
-
 --- Run a command displaying its execution on standard output.
 -- @return boolean: true if command succeeds (status code 0), false
 -- otherwise.
@@ -122,6 +121,9 @@ do -- this is the run chunk
 
     end
 
+
+
+
     local function get_build_meta_data(rockspec)
         assert(rockspec:type() == "rockspec")
         local build_meta_data = rockspec.build.meta or {}
@@ -140,26 +142,45 @@ do -- this is the run chunk
     -- @param rockspec table: the loaded rockspec.
     -- @return boolean or (nil, string): true if no errors ocurred,
     -- nil and an error message otherwise.
-    function purelua.run(rockspec)
+    function purelua.run(rockspec, extraParams)
         assert(rockspec:type() == "rockspec")
 
+        local obfuscate = extraParams.obfuscate
         local modules_to_destination = create_module_to_destination_map(rockspec)
         local perms = "read"
         for name, dest in pairs(modules_to_destination) do
             fs.make_dir(dir.dir_name(dest))
             ok, err = fs.copy(name, dest, perms)
             if not ok then
-                return false, "Failed installing "..name.." in "..dest..": "..err
+                return nil, "Failed installing "..name.." in "..dest..": "..err
+            end
+            if obfuscate then
+                local dir_name = dir.dir_name(dest)
+                local file_name = dir.base_name(dest)
+
+                -- chaging dir cause scriptEncryptor can't hadndle dots (".") in path
+                local ok, err = fs.change_dir(dir_name)
+                if not ok then return nil, err end
+
+                local ok, err = fs.encrypt_script(file_name)
+                if ok then
+                    fs.delete(dest)
+                end
+                fs.pop_dir()
             end
         end
 
         -- build meta data can be used by a build system that uses this rock
         local build_meta_data = get_build_meta_data(rockspec)
+        --        local json_ok, json = util.require_json()
+        --        if not json_ok then return nil, "A JSON library is required for this command. "..json end
         local stringify = json.stringify(build_meta_data)
-        local install_dir = path.install_dir(rockspec.name, rockspec.version)     --path.lua_dir(rockspec.name, rockspec.version)
+        local deploy_dir = path.install_dir(rockspec.name, rockspec.version)     --path.lua_dir(rockspec.name, rockspec.version)
         local meta_build_file_name = "meta.json"
-        local dest = dir.path(install_dir, meta_build_file_name)
+        local dest = dir.path(deploy_dir, meta_build_file_name)
         write_new_file(dest, stringify)
+
+
 
         return true
     end

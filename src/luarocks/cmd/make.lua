@@ -67,7 +67,7 @@ only dependencies of the rockspec (see `luarocks help install`).
 -- error message otherwise. exitcode is optionally returned.
 function make.command(flags, rockspec_filename)
    assert(type(rockspec_filename) == "string" or not rockspec_filename)
-   
+
    if not rockspec_filename then
       local err
       rockspec_filename, err = util.get_default_rockspec()
@@ -78,7 +78,7 @@ function make.command(flags, rockspec_filename)
    if not rockspec_filename:match("rockspec$") then
       return nil, "Invalid argument: 'make' takes a rockspec as a parameter. "..util.see_help("make")
    end
-   
+
    local rockspec, err, errcode = fetch.load_rockspec(rockspec_filename)
    if not rockspec then
       return nil, err
@@ -88,6 +88,7 @@ function make.command(flags, rockspec_filename)
 
    local opts = build.opts({
       avoid_fulfill_dependencies = flags["avoid-fulfill-dependencies"] or false,
+      obfuscate = flags["obfuscate"] or false,
       need_to_fetch = false,
       minimal_mode = true,
       deps_mode = deps.get_deps_mode(flags),

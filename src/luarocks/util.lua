@@ -33,7 +33,7 @@ local debug = require("debug")
 -- which can be used to remove the item later from the list.
 function util.schedule_function(f, ...)
    assert(type(f) == "function")
-   
+
    local item = { fn = f, args = {...} }
    table.insert(scheduled_functions, item)
    return item
@@ -283,7 +283,7 @@ end
 function util.variable_substitutions(tbl, vars)
    assert(type(tbl) == "table")
    assert(type(vars) == "table")
-   
+
    local updated = {}
    for k, v in pairs(tbl) do
       if type(v) == "string" then
@@ -535,6 +535,7 @@ function util.deep_copy(tbl)
    return copy
 end
 
+
 -- An ode to the multitude of JSON libraries out there...
 function util.require_json()
    local list = { "cjson", "dkjson", "json" }
@@ -649,10 +650,10 @@ do
             end
          end
          local interp = luaver
-                        and ("Lua " .. luaver .. " interpreter")
-                        or  "Lua interpreter"
+                 and ("Lua " .. luaver .. " interpreter")
+                 or  "Lua interpreter"
          return nil, interp .. " not found at " .. prefix .. "\n" ..
-                     "Tried:\t" .. table.concat(tried, "\n\t")
+                 "Tried:\t" .. table.concat(tried, "\n\t")
       end
    end
 
@@ -688,9 +689,9 @@ end
 
 function util.opts_table(type_name, valid_opts)
    local opts_mt = {}
-   
+
    opts_mt.__index = opts_mt
-   
+
    function opts_mt.type()
       return type_name
    end

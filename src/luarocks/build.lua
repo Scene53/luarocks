@@ -11,6 +11,10 @@ local deps = require("luarocks.deps")
 local cfg = require("luarocks.core.cfg")
 local repos = require("luarocks.repos")
 local writer = require("luarocks.manif.writer")
+local queries = require("luarocks.queries")
+local persist = require("luarocks.persist")
+local type_rockspec = require("luarocks.type.rockspec")
+
 
 build.opts = util.opts_table("build.opts", {
    need_to_fetch = "boolean",
@@ -20,7 +24,8 @@ build.opts = util.opts_table("build.opts", {
    namespace = "string?",
    branch = "boolean",
    verify = "boolean",
-   avoid_fulfill_dependencies = "boolean"
+   avoid_fulfill_dependencies = "boolean",
+   obfuscate = "boolean"
 })
 
 do
@@ -79,7 +84,7 @@ end
 
 local function check_macosx_deployment_target(rockspec)
    local target = rockspec.build.macosx_deployment_target
-   local function minor(version) 
+   local function minor(version)
       return tonumber(version and version:match("^[^.]+%.([^.]+)"))
    end
    local function patch_variable(var)
@@ -181,7 +186,7 @@ local function prepare_install_dirs(name, version)
    return dirs
 end
 
-local function run_build_driver(rockspec)
+local function run_build_driver(rockspec, extraParams)
    local btype = rockspec.build.type
    if btype == "none" then
       return true
@@ -199,7 +204,7 @@ local function run_build_driver(rockspec)
    if not pok or type(driver) ~= "table" then
       return nil, "Failed initializing build back-end for build type '"..btype.."': "..driver
    end
-   local ok, err = driver.run(rockspec)
+   local ok, err = driver.run(rockspec, extraParams)
    if not ok then
       return nil, "Build error: " .. err
    end
@@ -318,10 +323,20 @@ do
    end
 end
 
-local function write_rock_dir_files(rockspec, opts)
+
+local function write_rock_dir_files(rockspec, opts, obfuscate)
    local name, version = rockspec.name, rockspec.version
 
    fs.copy(rockspec.local_abs_filename, path.rockspec_file(name, version), "read")
+
+   if obfuscate then
+      local rockspec_table = persist.load_into_table(path.rockspec_file(name, version))
+      rockspec_table.package = rockspec.package
+      rockspec_table.dependencies = rockspec.dependencies
+      persist.save_from_table(path.rockspec_file(name, version), rockspec_table, type_rockspec.order)
+
+
+   end
 
    local ok, err = writer.make_rock_manifest(name, version)
    if not ok then return nil, err end
@@ -350,6 +365,28 @@ end
 function build.build_rockspec(rockspec, opts)
    assert(rockspec:type() == "rockspec")
    assert(opts:type() == "build.opts")
+   local obfuscate = opts.obfuscate
+   if obfuscate then
+      -- mofidy package name
+      local new_package_name = rockspec.package .. "-obf"
+      rockspec.package = new_package_name
+      rockspec.name = new_package_name
+
+      -- modify deps
+      local key = "dependencies"
+      if rockspec[key] then
+         for i = 1, #rockspec[key] do
+            local dep = tostring(rockspec[key][i])
+            local parsed, err = queries.from_dep_string(dep)
+            if not parsed then
+               return nil, "Parse error processing dependency '"..rockspec[key][i].."': "..tostring(err)
+            end
+            parsed.name = parsed.name .. "-obf"
+            local string = tostring(parsed)
+            rockspec[key][i] = string
+         end
+      end
+   end
 
    if not rockspec.build then
       if rockspec:format_is_at_least("3.0") then
@@ -375,7 +412,7 @@ function build.build_rockspec(rockspec, opts)
    local name, version = rockspec.name, rockspec.version
    if opts.build_only_deps then
       return name, version
-   end   
+   end
 
    if repos.is_installed(name, version) then
       repos.delete_version(name, version, opts.deps_mode)
@@ -383,10 +420,10 @@ function build.build_rockspec(rockspec, opts)
 
    ok, err = fetch_and_change_to_source_dir(rockspec, opts)
    if not ok then return nil, err end
-   
+
    local dirs, err = prepare_install_dirs(name, version)
    if not dirs then return nil, err end
-   
+
    local rollback = util.schedule_function(function()
       fs.delete(path.install_dir(name, version))
       fs.remove_dir_if_empty(path.versions_dir(name))
@@ -394,16 +431,16 @@ function build.build_rockspec(rockspec, opts)
 
    ok, err = build.apply_patches(rockspec)
    if not ok then return nil, err end
-   
+
    ok, err = check_macosx_deployment_target(rockspec)
    if not ok then return nil, err end
-   
-   ok, err = run_build_driver(rockspec)
+
+   ok, err = run_build_driver(rockspec , {obfuscate = obfuscate})
    if not ok then return nil, err end
-   
+
    ok, err = install_files(rockspec, dirs)
    if not ok then return nil, err end
-   
+
    for _, d in pairs(dirs) do
       fs.remove_dir_if_empty(d.name)
    end
@@ -413,12 +450,12 @@ function build.build_rockspec(rockspec, opts)
       fs.pop_dir()
    end
 
-   ok, err = write_rock_dir_files(rockspec, opts)
+   ok, err = write_rock_dir_files(rockspec, opts, obfuscate)
    if not ok then return nil, err end
 
    ok, err = repos.deploy_files(name, version, repos.should_wrap_bin_scripts(rockspec), opts.deps_mode)
    if not ok then return nil, err end
-   
+
    util.remove_scheduled_function(rollback)
    rollback = util.schedule_function(function()
       repos.delete_version(name, version, opts.deps_mode)
@@ -433,3 +470,5 @@ function build.build_rockspec(rockspec, opts)
 end
 
 return build
+
+

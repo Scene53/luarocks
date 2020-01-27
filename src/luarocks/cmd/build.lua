@@ -142,7 +142,7 @@ end
 function cmd_build.command(flags, name, version)
    assert(type(name) == "string" or not name)
    assert(type(version) == "string" or not version)
-   
+
    if not name then
       return make.command(flags)
    end
@@ -151,6 +151,7 @@ function cmd_build.command(flags, name, version)
 
    local opts = build.opts({
       avoid_fulfill_dependencies = flags["avoid-fulfill-dependencies"] or false,
+      obfuscate = flags["obfuscate"] or false,
       need_to_fetch = true,
       minimal_mode = false,
       deps_mode = deps.get_deps_mode(flags),
@@ -174,7 +175,7 @@ function cmd_build.command(flags, name, version)
          return status, err, errcode
       end)
    end
-   
+
    local ok, err = fs.check_command_permissions(flags)
    if not ok then
       return nil, err, cmd.errorcodes.PERMISSIONDENIED
