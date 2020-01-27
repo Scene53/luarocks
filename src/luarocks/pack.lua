@@ -60,7 +60,7 @@ local function copy_back_files(name, version, file_tree, deploy_dir, pack_dir, p
       local source = dir.path(deploy_dir, file)
       local target = dir.path(pack_dir, file)
       if type(sub) == "table" then
-         local ok, err = copy_back_files(name, version, sub, source, target)
+         local ok, err = copy_back_files(name, version, sub, source, target, perms, obfuscate)
          if not ok then return nil, err end
       else
          local versioned = path.versioned_name(source, deploy_dir, name, version)
@@ -69,13 +69,13 @@ local function copy_back_files(name, version, file_tree, deploy_dir, pack_dir, p
          else
             fs.copy(source, target, perms)
          end
-      end
 
       if obfuscate then
          local ok, err = fs.encrypt_script(target)
          if ok then
             fs.delete(target)
          end
+      end
       end
    end
    return true
