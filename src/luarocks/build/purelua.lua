@@ -124,7 +124,7 @@ do -- this is the run chunk
 
     local function get_build_meta_data(rockspec)
         assert(rockspec:type() == "rockspec")
-        local build_meta_data = rockspec.build.meta_data or {}
+        local build_meta_data = rockspec.build.meta or {}
         local build_meta_data_defaults = get_meta_data_defaults(rockspec)
 
         for k, v in pairs(build_meta_data_defaults) do
