@@ -9,6 +9,8 @@ local path = require("luarocks.path")
 local util = require("luarocks.util")
 local cfg = require("luarocks.core.cfg")
 local dir = require("luarocks.dir")
+local json = require("luarocks.tools.json")
+
 
 --- Run a command displaying its execution on standard output.
 -- @return boolean: true if command succeeds (status code 0), false
@@ -153,8 +155,6 @@ do -- this is the run chunk
 
         -- build meta data can be used by a build system that uses this rock
         local build_meta_data = get_build_meta_data(rockspec)
-        local json_ok, json = util.require_json()
-        if not json_ok then return nil, "A JSON library is required for this command. "..json end
         local stringify = json.stringify(build_meta_data)
         local install_dir = path.install_dir(rockspec.name, rockspec.version)     --path.lua_dir(rockspec.name, rockspec.version)
         local meta_build_file_name = "meta.json"
