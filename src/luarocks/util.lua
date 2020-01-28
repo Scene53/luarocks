@@ -84,7 +84,7 @@ end
 -- (as in the value for --detailed="<text>").
 -- For all other string values, it means the parameter is mandatory.
 local supported_flags = {
-   ["obfuscate"] = true, -- if sent to the pack command packed files will be obfuscated using scriptEncryptor
+   ["obfuscate"] = true, -- if sent to the make command, rock will be built as an obfuscated rock meaning: 1) all files will be obfuscated using scriptEncryptor 2) "-obf" will be added to rock name and to all its dependencies
    ["avoid-fulfill-dependencies"] = true, --when used in make cmd build the rock without installing dependencies.
    ["all"] = true,
    ["api-key"] = "<key>",

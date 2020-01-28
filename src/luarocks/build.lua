@@ -323,6 +323,9 @@ do
    end
 end
 
+-- this function copy rockspec to install dir
+--    if obfuscate, we override some keys with the input rockspec table data.
+--    TODO: in the future the keys to override can be gotten from the input rockspec table, the rockspec table is already loaded with other params. and it won't be loaded into file so we don't care )
 
 local function write_rock_dir_files(rockspec, opts, obfuscate)
    local name, version = rockspec.name, rockspec.version
@@ -330,12 +333,15 @@ local function write_rock_dir_files(rockspec, opts, obfuscate)
    fs.copy(rockspec.local_abs_filename, path.rockspec_file(name, version), "read")
 
    if obfuscate then
+      --loading the copied rockspec
       local rockspec_table = persist.load_into_table(path.rockspec_file(name, version))
+
+      -- override package name and deps (they were modified earlier)
       rockspec_table.package = rockspec.package
       rockspec_table.dependencies = rockspec.dependencies
+
+      -- save the modified tbale
       persist.save_from_table(path.rockspec_file(name, version), rockspec_table, type_rockspec.order)
-
-
    end
 
    local ok, err = writer.make_rock_manifest(name, version)
@@ -360,6 +366,7 @@ end
 -- @param build_only_deps boolean: true to build the listed dependencies only.
 -- @param namespace string?: a namespace for the rockspec
 -- @param branch string?: a forced branch to use
+-- @param obfuscate string?: if true rock will be built as an obfuscated rock (files will be obfuscated and "-obf" postfix will be added to package name and all of its dependencies)
 -- @return (string, string) or (nil, string, [string]): Name and version of
 -- installed rock if succeeded or nil and an error message followed by an error code.
 function build.build_rockspec(rockspec, opts)
