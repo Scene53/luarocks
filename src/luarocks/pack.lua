@@ -53,14 +53,14 @@ function pack.pack_source_rock(rockspec_file)
    return rock_file
 end
 
-local function copy_back_files(name, version, file_tree, deploy_dir, pack_dir, perms, obfuscate)
+local function copy_back_files(name, version, file_tree, deploy_dir, pack_dir, perms)
    local ok, err = fs.make_dir(pack_dir)
    if not ok then return nil, err end
    for file, sub in pairs(file_tree) do
       local source = dir.path(deploy_dir, file)
       local target = dir.path(pack_dir, file)
       if type(sub) == "table" then
-         local ok, err = copy_back_files(name, version, sub, source, target, perms, obfuscate)
+         local ok, err = copy_back_files(name, version, sub, source, target)
          if not ok then return nil, err end
       else
          local versioned = path.versioned_name(source, deploy_dir, name, version)
@@ -69,14 +69,9 @@ local function copy_back_files(name, version, file_tree, deploy_dir, pack_dir, p
          else
             fs.copy(source, target, perms)
          end
+      end
 
-      if obfuscate then
-         local ok, err = fs.encrypt_script(target)
-         if ok then
-            fs.delete(target)
-         end
-      end
-      end
+
    end
    return true
 end
@@ -84,10 +79,9 @@ end
 -- @param name string: Name of package to pack.
 -- @param version string or nil: A version number may also be passed.
 -- @param tree string or nil: An optional tree to pick the package from.
--- @param obfuscate bool: if true, packed files will be obfuscated using scriptEncryptor
 -- @return string or (nil, string): The filename of the resulting
 -- .src.rock file; or nil and an error message.
-function pack.pack_installed_rock(query, tree, obfuscate)
+function pack.pack_installed_rock(query, tree)
 
    local name, version, repo, repo_url = search.pick_installed_rock(query, tree)
    if not name then
@@ -128,7 +122,7 @@ function pack.pack_installed_rock(query, tree, obfuscate)
            deploy_dir = dir.path(deploy_dir, name)
        end
 
-      local ok, err = copy_back_files(name, version, rock_manifest.lua, deploy_dir, dir.path(temp_dir, "lua"), "read", obfuscate)
+      local ok, err = copy_back_files(name, version, rock_manifest.lua, deploy_dir, dir.path(temp_dir, "lua"), "read")
       if not ok then return nil, "Failed copying back files: " .. err end
    end
    

@@ -38,7 +38,7 @@ function cmd_pack.command(flags, arg, version)
    else
       local name = util.adjust_name_and_namespace(arg, flags)
       local query = queries.new(name, version)
-      file, err = pack.pack_installed_rock(query, flags["tree"], flags["obfuscate"])
+      file, err = pack.pack_installed_rock(query, flags["tree"])
    end
    return pack.report_and_sign_local_file(file, err, flags["sign"])
 end
