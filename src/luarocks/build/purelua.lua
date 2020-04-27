@@ -149,6 +149,12 @@ do -- this is the run chunk
         local modules_to_destination = create_module_to_destination_map(rockspec)
         local perms = "read"
         for name, dest in pairs(modules_to_destination) do
+            -- validate that file is a valid lua file
+            local ok = fs.execute_string("luac " .. name)
+            if not ok then
+                return nil, "Broken lua file: " .. name
+            end
+
             fs.make_dir(dir.dir_name(dest))
             ok, err = fs.copy(name, dest, perms)
             if not ok then
