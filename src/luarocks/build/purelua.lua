@@ -150,7 +150,7 @@ do -- this is the run chunk
         local perms = "read"
         for name, dest in pairs(modules_to_destination) do
             -- validate that file is a valid lua file
-            local ok = fs.execute_string("luac " .. name)
+            local ok = fs.execute_string("luac -p " .. name)
             if not ok then
                 return nil, "Broken lua file: " .. name
             end
