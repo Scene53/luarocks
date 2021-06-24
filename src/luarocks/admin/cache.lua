@@ -85,7 +85,7 @@ function cache.refresh_local_cache(url, given_user, given_password)
 
     res = download_cache(protocol, server_path, user, password)
     util.printout("result is: " ..tostring(res))
-    if not res or res ~= 8 then
+    if not res then
         return nil, "Failed downloading cache."
     end
 
