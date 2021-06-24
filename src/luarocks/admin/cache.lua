@@ -64,6 +64,7 @@ local function download_cache(protocol, server_path, user, password)
         local cmd = cfg.variables.WGET.." --no-cache -q -m -np -nd -kpN -e robots=off --reject *.rock " ..protocol.. "://"..server_path..login_info
         print("executing cmd = ", cmd)
         local res = os.execute(cmd)
+        print("result is - " ..tostring(res))
         return res
     end
 end
