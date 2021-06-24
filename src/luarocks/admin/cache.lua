@@ -85,9 +85,11 @@ function cache.refresh_local_cache(url, given_user, given_password)
 
     res = download_cache(protocol, server_path, user, password)
     util.printout("result is: " ..tostring(res))
-    if not res then
-        return nil, "Failed downloading cache."
-    end
+   -- Rubin 24.06.2021 - for some reason wget fails from time to time. 
+   -- Disabling for now the cache downloading
+   --  if not res then
+   --      return nil, "Failed downloading cache."
+   --  end
 
     return local_cache, protocol, server_path, user, password
 end
